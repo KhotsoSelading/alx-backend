@@ -12,8 +12,7 @@ index_range = __import__('0-simple_helper_function').index_range
 
 
 class Server:
-    """Server class to paginate a database of popular baby names.
-    """
+    """Server class to paginate a database of popular baby names."""
     DATA_FILE = "Popular_Baby_Names.csv"
 
     def __init__(self):
@@ -44,22 +43,24 @@ class Server:
 
     def get_page(self, page: int = 1, page_size: int = 10) -> List[List]:
         """
-        Returns a page of the dataset.
+        Takes 2 integer arguments then returns requested page from the dataset
         Args:
-            page (int): The page number.
-            page_size (int): The page size.
-        Returns:
-            List[List]: The page of the dataset.
+            page (int): required page number. Should be a positive integer
+            page_size (int): number of records per page. Should be a positive
+                            integer
+        Return:
+            list of lists containing required data from the dataset
         """
-        self.assert_positive_integer_type(page)
-        self.assert_positive_integer_type(page_size)
+        assert type(page) is int and page > 0
+        assert type(page_size) is int and page_size > 0
+
         dataset = self.dataset()
-        start, end = index_range(page, page_size)
+        data_length = len(dataset)
         try:
-            data = dataset[start:end]
+            index = index_range(page, page_size)
+            return dataset[index[0]:index[1]]
         except IndexError:
-            data = []
-        return data
+            return []
 
     def get_hyper(self, page: int = 1, page_size: int = 10) -> Dict:
         """
@@ -87,7 +88,7 @@ class Server:
 
         next_page = (
             page + 1 if page * page_size < len(self.dataset()) else None
-        )
+            )
         prev_page = page - 1 if page > 1 else None
 
         hyper_info = {
