@@ -6,13 +6,13 @@ Date: 22-01-2024
 """
 
 import csv
+import math
 from typing import List, Dict
 
 
 class Server:
     """Server class to paginate a database of popular baby names.
     """
-
     DATA_FILE = "Popular_Baby_Names.csv"
 
     def __init__(self):
@@ -42,44 +42,43 @@ class Server:
         return self.__indexed_dataset
 
     def get_hyper_index(self, index: int = None, page_size: int = 10) -> Dict:
-        """Get hypermedia index for pagination.
+        """
+        Retrieves a paginated subset of the dataset starting from the
+        specified index.
 
         Args:
-            index (int): The current start index of the return page.
-                         Defaults to None (starts from the beginning).
-            page_size (int): The current page size. Defaults to 10.
+            index (int): The index of the first item in the current page.
+            page_size (int): The desired number of records per page.
 
         Returns:
-            Dict: Dictionary with the following key-value pairs:
-                index: the current start index of the return page.
-                next_index: the next index to query with.
-                page_size: the current page size.
-                data: the actual page of the dataset.
+            Dict: A dictionary containing the following key-value pairs:
+                - 'index': The current start index of the return page.
+                - 'next_index': The next index to query with (index of the
+                first item after the last item on the current page).
+                - 'page_size': The current page size.
+                - 'data': The actual page of the dataset.
 
-        Requirements/Behavior:
-            - Use assert to verify that index is in a valid range.
-            - If the user queries index 0, page_size 10, they will get rows
-            indexed 0 to 9 included.
-            - If they request the next index (10) with page_size 10, but rows
-              3,6, and 7 were deleted, the user should still receive rows
-              indexed 10 to 19 included.
+        Raises:
+            AssertionError: If the specified index is not within the valid
+            range [0, dataset_length).
         """
-        assert index is None or (index >= 0 and index < len(self.dataset())),
-        "Invalid index"
+        dataset = self.indexed_dataset()
+        data_length = len(dataset)
 
-        if index is None:
-            index = 0
+        assert 0 <= index < data_length
 
-        next_index = index + page_size
+        response = {'index': index, 'page_size': page_size}
+        data = []
 
-        if next_index > len(self.dataset()):
-            next_index = len(self.dataset())
+        for _ in range(page_size):
+            while index < data_length and index not in dataset:
+                index += 1
 
-        current_page = self.dataset()[index:next_index]
+            if index < data_length:
+                data.append(dataset[index])
+                index += 1
 
-        return {
-            "index": index,
-            "next_index": next_index,
-            "page_size": page_size,
-            "data": current_page
-        }
+        response['data'] = data
+        response['next_index'] = index if index < data_length else None
+
+        return response
